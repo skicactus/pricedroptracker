@@ -34,6 +34,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+> **If this folder lives in iCloud Drive** (as it does by default under
+> `~/Library/Mobile Documents/com~apple~CloudDocs/...`), don't let the venv's
+> thousands of small files sit there — macOS will eventually evict them to
+> free space, and Python will hang trying to read a cloud-only placeholder.
+> Create the real venv somewhere local instead and symlink it in:
+> ```bash
+> python3 -m venv ~/.venvs/pricedroptracker
+> ln -s ~/.venvs/pricedroptracker venv
+> pip install -r requirements.txt
+> ```
+> Everything else (`venv/bin/...`, `source venv/bin/activate`) works exactly
+> the same through the symlink.
+
 ## Usage
 
 ### 1. Add products and browse history (dashboard)
