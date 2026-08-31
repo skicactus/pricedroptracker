@@ -42,18 +42,26 @@ playwright install chromium
 ```
 
 > **If this folder lives in iCloud Drive** (as it does by default under
-> `~/Library/Mobile Documents/com~apple~CloudDocs/...`), don't let the venv's
-> thousands of small files sit there -- macOS will eventually evict them to
-> free space, and Python will hang trying to read a cloud-only placeholder.
-> Create the real venv somewhere local instead and symlink it in:
+> `~/Library/Mobile Documents/com~apple~CloudDocs/...`), keep the venv
+> **fully outside it** -- don't even symlink one in. Two different failure
+> modes were hit building this: with the venv's thousands of small files
+> sitting directly in the synced folder, macOS eventually evicts them to
+> free space and Python hangs reading a cloud-only placeholder; a symlink
+> pointing back out to a local venv avoids that, but iCloud's own
+> conflict-resolution for symlinks-vs-directories is buggy -- it can spin up
+> a phantom duplicate copy (e.g. a stray "venv 2") that iCloud endlessly
+> retries syncing, and the resulting file-coordination locking stalls
+> `git status`/`git commit` for the whole repo. The only setup that avoided
+> both:
 > ```bash
 > python3 -m venv ~/.venvs/pricedroptracker
-> ln -s ~/.venvs/pricedroptracker venv
+> source ~/.venvs/pricedroptracker/bin/activate
 > pip install -r requirements.txt
 > playwright install chromium
 > ```
-> Everything else (`venv/bin/...`, `source venv/bin/activate`) works exactly
-> the same through the symlink.
+> Run everything (`streamlit run dashboard.py`, `pytest`, `python tracker.py`)
+> from inside this project folder with that venv activated -- there's just no
+> `venv/` inside the project directory at all, nothing for iCloud to trip on.
 
 ## Usage
 
