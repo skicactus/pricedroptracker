@@ -83,11 +83,11 @@ def _parse_card_text(text: str) -> dict | None:
             other.append(line)
     if not prices:
         return None
-    title = other[0] if other else "Untitled listing"
+    brand = other[0] if other else "Untitled listing"
     size = other[1] if len(other) > 1 else None
     price = prices[-1]  # sale price is listed last when there's a strikethrough original
     original_price = prices[0] if len(prices) > 1 else None
-    return {"title": title, "size": size, "price": price, "original_price": original_price}
+    return {"brand": brand, "size": size, "price": price, "original_price": original_price}
 
 
 def _extract_cards(page) -> list[dict]:
@@ -95,7 +95,7 @@ def _extract_cards(page) -> list[dict]:
         'a[href*="/products/"]',
         """els => els.map(e => {
             const card = e.closest('li') || e.parentElement.parentElement;
-            return { href: e.href, text: card.innerText };
+            return { href: e.href, text: card.innerText, label: e.getAttribute('aria-label') };
         })""",
     )
     results = []
@@ -108,6 +108,10 @@ def _extract_cards(page) -> list[dict]:
             continue
         seen_urls.add(raw["href"])
         parsed["url"] = raw["href"]
+        # aria-label carries Depop's own descriptive title (e.g. "Polo ralph
+        # lauren men's grey shirt"), much better for re-searching than the
+        # bare brand name pulled from the card's visible text.
+        parsed["title"] = raw["label"] or parsed["brand"]
         results.append(parsed)
     return results
 
@@ -131,6 +135,21 @@ def search(query: str, min_condition: str | None = None, limit: int = 20) -> lis
             browser.close()
 
     return cards[:limit]
+
+
+def find_cheaper_alternatives(
+    title: str, current_price: float, exclude_url: str | None = None, limit: int = 5
+) -> list[dict]:
+    """Search Depop using `title` (typically a tracked item's own title) and
+    return other listings priced below `current_price`, cheapest first.
+    Depop has no SKU matching -- this is a title-text search, so results are
+    "similar items from other sellers," not verified identical items.
+    """
+    results = search(title, limit=limit + 1)
+    cheaper = [
+        r for r in results if r["price"] < current_price and r["url"] != exclude_url
+    ]
+    return cheaper[:limit]
 
 
 def get_listing(url: str) -> dict:

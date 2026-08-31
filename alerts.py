@@ -34,6 +34,26 @@ def check_and_alert(product, price: float, previous_price: float | None):
         _send_email_alert(product, price, message)
 
 
+def alert_cheaper_alternatives(product, alternatives: list[dict]):
+    """Log (and optionally email) any cheaper listings found elsewhere on
+    Depop for a tracked item. Depop has no SKU matching, so these are
+    similar items from other sellers, not guaranteed identical ones.
+    """
+    if not alternatives:
+        return
+
+    cheapest = alternatives[0]
+    message = (
+        f"CHEAPER ALTERNATIVE: found \"{cheapest['title']}\" at ${cheapest['price']:.2f} "
+        f"(vs {product['name']} tracked at ${product['threshold']:.2f}) -> {cheapest['url']}"
+    )
+    logger.info(message)
+    print(f"\n~~~ {message} ~~~\n")
+
+    if config.EMAIL_ENABLED:
+        _send_email_alert(product, cheapest["price"], message)
+
+
 def _send_email_alert(product, price: float, message: str):
     if not (config.SMTP_USERNAME and config.SMTP_PASSWORD and config.ALERT_EMAIL_TO):
         logger.warning("EMAIL_ENABLED is true but SMTP settings are incomplete; skipping email")

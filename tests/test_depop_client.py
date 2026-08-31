@@ -52,7 +52,7 @@ def test_parse_card_text_with_sale_price():
     text = "Polo Ralph Lauren\n\nXL\n\n$10.00\n\n \n\n$2.00"
     parsed = dc._parse_card_text(text)
     assert parsed == {
-        "title": "Polo Ralph Lauren",
+        "brand": "Polo Ralph Lauren",
         "size": "XL",
         "price": 2.00,
         "original_price": 10.00,
@@ -63,7 +63,7 @@ def test_parse_card_text_without_sale_price():
     text = "Polo Ralph Lauren\n\nXL\n\n$4.00"
     parsed = dc._parse_card_text(text)
     assert parsed == {
-        "title": "Polo Ralph Lauren",
+        "brand": "Polo Ralph Lauren",
         "size": "XL",
         "price": 4.00,
         "original_price": None,
@@ -72,3 +72,30 @@ def test_parse_card_text_without_sale_price():
 
 def test_parse_card_text_with_no_price_returns_none():
     assert dc._parse_card_text("Polo Ralph Lauren\n\nSold out") is None
+
+
+def test_find_cheaper_alternatives_filters_by_price(monkeypatch):
+    fake_results = [
+        {"title": "A", "price": 5.0, "url": "https://depop.com/products/a/"},
+        {"title": "B", "price": 8.0, "url": "https://depop.com/products/b/"},
+        {"title": "C", "price": 12.0, "url": "https://depop.com/products/c/"},
+    ]
+    monkeypatch.setattr(dc, "search", lambda title, limit=None: fake_results)
+
+    cheaper = dc.find_cheaper_alternatives("grey polo shirt", current_price=10.0)
+    assert [r["url"] for r in cheaper] == [
+        "https://depop.com/products/a/",
+        "https://depop.com/products/b/",
+    ]
+
+
+def test_find_cheaper_alternatives_excludes_own_url(monkeypatch):
+    fake_results = [
+        {"title": "A", "price": 5.0, "url": "https://depop.com/products/a/"},
+    ]
+    monkeypatch.setattr(dc, "search", lambda title, limit=None: fake_results)
+
+    cheaper = dc.find_cheaper_alternatives(
+        "grey polo shirt", current_price=10.0, exclude_url="https://depop.com/products/a/"
+    )
+    assert cheaper == []

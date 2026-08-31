@@ -1,12 +1,15 @@
 # Depop Price Tracker
 
-Two tools in one:
+Three tools in one:
 
 1. **Search** — find the cheapest listing on Depop matching a query, with a
    minimum-condition filter (e.g. "cheapest grey Polo Ralph Lauren shirt,
    Used - Good or better"), and get a direct link to it.
 2. **Wishlist tracking** — sync your Depop account's liked items (or add
    specific listings by URL) and get alerted when any of them drop in price.
+3. **Cheaper alternatives** — for anything you're tracking, search Depop by
+   its title and surface other sellers' listings priced lower than what
+   you're tracking it at.
 
 ![Dashboard screenshot](docs/dashboard-screenshot.png)
 
@@ -121,10 +124,16 @@ tests, since that would mean hitting Depop's live servers on every test run.
 
 ## Known limitations
 
-- **Depop's own search relevance, not exact matching.** "Search" hands your
-  query straight to Depop's search box, so results can include loosely
-  related items (e.g. a search for a specific brand surfacing a different
-  brand) -- same as searching on depop.com directly.
+- **Depop's own search relevance, not exact matching.** "Search" and
+  "Cheaper alternatives" both hand a text query straight to Depop's search
+  box, so results can include loosely related items (e.g. a search for a
+  specific brand surfacing a different brand) -- same as searching on
+  depop.com directly. There's no SKU/UPC matching on a resale marketplace,
+  so "alternatives" means similar listings from other sellers, not
+  guaranteed-identical items.
+- **Each search drives a fresh headless browser.** Expect roughly 10-40
+  seconds per search or alternatives lookup depending on system load --
+  there's no shared browser instance kept warm between requests.
 - **Wishlist sessions expire.** Depop's login cookies don't last forever;
   when they do, `tracker.py`/the dashboard will tell you to re-run
   `depop_login.py`.

@@ -77,6 +77,11 @@ def run_once():
 
         alerts.check_and_alert(product, price, previous_price)
 
+        alternatives = depop_client.find_cheaper_alternatives(
+            listing["title"] or product["name"], current_price=price, exclude_url=product["url"]
+        )
+        alerts.alert_cheaper_alternatives(product, alternatives)
+
 
 def run_loop():
     interval_seconds = config.POLL_INTERVAL_HOURS * 3600
