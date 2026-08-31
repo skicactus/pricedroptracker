@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS products (
     name TEXT NOT NULL,
     url TEXT NOT NULL UNIQUE,
     threshold REAL NOT NULL,
-    selector TEXT,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%S', 'now'))
 );
 
@@ -43,13 +42,19 @@ def init_db():
         conn.executescript(SCHEMA)
 
 
-def add_product(name: str, url: str, threshold: float, selector: str | None = None) -> int:
+def add_product(name: str, url: str, threshold: float) -> int:
     with get_connection() as conn:
         cursor = conn.execute(
-            "INSERT INTO products (name, url, threshold, selector) VALUES (?, ?, ?, ?)",
-            (name, url, threshold, selector),
+            "INSERT INTO products (name, url, threshold) VALUES (?, ?, ?)",
+            (name, url, threshold),
         )
         return cursor.lastrowid
+
+
+def product_exists(url: str) -> bool:
+    with get_connection() as conn:
+        row = conn.execute("SELECT 1 FROM products WHERE url = ?", (url,)).fetchone()
+        return row is not None
 
 
 def remove_product(product_id: int):

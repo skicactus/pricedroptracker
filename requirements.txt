@@ -1,5 +1,5 @@
-requests==2.32.3
-beautifulsoup4==4.12.3
+playwright==1.62.0
 streamlit==1.39.0
+requests==2.34.2  # transitive runtime dependency of streamlit, not used directly
 pandas==2.2.3
 pytest==8.3.3
